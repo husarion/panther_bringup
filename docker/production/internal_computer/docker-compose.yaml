@@ -1,0 +1,88 @@
+version: '3.4'
+
+services:
+  # ROS Noetic panther motor controllers driver
+  panther_driver:
+    image: husarion/panther-driver:noetic-latest
+    container_name: panther-driver
+    tty: true
+    network_mode: host
+    restart: on-failure
+    depends_on:
+      - ros_master
+    environment:
+      - ROS_IP=10.15.20.2
+      - ROS_MASTER_URI=http://10.15.20.2:11311
+    command: roslaunch panther_driver driver.launch
+
+  # ROS Noetic velocity manager
+  velocity_manager:
+    image: husarion/velocity_manager:noetic-latest
+    container_name: velocity-manager
+    tty: true
+    network_mode: host
+    restart: on-failure
+    depends_on:
+      - ros_master
+    environment:
+      - ROS_IP=10.15.20.2
+      - ROS_MASTER_URI=http://10.15.20.2:11311
+    command: rosrun velocity_manager velocity_manager_node
+
+  # ROS Noetic web ui joystick
+  webui-ros-joystick:
+    image: husarion/webui-ros-joystick:noetic-latest
+    container_name: webui-ros-joystick
+    tty: true
+    network_mode: host
+    restart: on-failure
+    depends_on:
+      - ros_master
+    environment:
+      - ROS_IP=10.15.20.2
+      - ROS_MASTER_URI=http://10.15.20.2:11311
+    command: roslaunch webui-ros-joystick webui.launch
+
+  # ROS Noetic LED lights controller
+  panther_lights_controller:
+    image: husarion/panther-lights-controller:noetic-rpi-apa102-latest
+    container_name: panther-lights-controller
+    tty: true
+    privileged: true
+    network_mode: host
+    restart: on-failure
+    depends_on:
+      - ros_master
+    environment:
+      - ROS_IP=10.15.20.2
+      - ROS_MASTER_URI=http://10.15.20.2:11311
+    volumes:
+      - /dev/gpiomem:/dev/gpiomem
+      - /sys:/sys
+    command: rosrun panther_lights_controller controller_node.py
+
+  # ROS Noetic lights animations scheduler
+  panther_lights_scheduler:
+    image: husarion/panther-lights-scheduler:noetic-latest
+    container_name: panther-lights-scheduler
+    tty: true
+    network_mode: host
+    restart: on-failure
+    depends_on:
+      - ros_master
+    environment:
+      - ROS_IP=10.15.20.2
+      - ROS_MASTER_URI=http://10.15.20.2:11311
+    command: rosrun panther_lights_scheduler lights_scheduler_node.py
+
+  # ROS Noetic roscore
+  ros_master:
+    image: ros:noetic-ros-core
+    container_name: ros-master
+    tty: true
+    network_mode: host
+    restart: on-failure
+    environment:
+      - ROS_IP=10.15.20.2
+      - ROS_MASTER_URI=http://10.15.20.2:11311
+    command: stdbuf -o L roscore

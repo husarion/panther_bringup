@@ -1,0 +1,17 @@
+version: '3.4'
+
+services:
+  # ROS Melodic rplidar node
+  ros-rplidar:
+    image: husarion/rplidar:latest
+    tty: true
+    network_mode: host
+    restart: on-failure
+    depends_on:
+      - ros_master
+    environment:
+      - ROS_IP=10.15.20.2
+      - ROS_MASTER_URI=http://10.15.20.2:11311
+    devices:
+      - /dev/ttyUSB0
+    command: roslaunch rplidar_ros rplidar_s1.launch 
